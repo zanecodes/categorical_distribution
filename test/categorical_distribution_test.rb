@@ -11,6 +11,12 @@ class CategoricalDistributionTest < Minitest::Test
     assert_equal({}, r.probabilities)
   end
 
+  def test_create_distribution_with_negatives
+    assert_raises ArgumentError do
+      r = CategoricalDistribution.new([-1])
+    end
+  end
+
   def test_create_distribution_with_int_array
     r = CategoricalDistribution.new([2, 4])
     assert_equal({ 0 => Rational(1, 3), 1 => Rational(2, 3) }, r.probabilities)

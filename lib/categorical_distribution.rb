@@ -53,7 +53,7 @@ class CategoricalDistribution
       values ||= p.each_index.to_a
     end
 
-    raise 'probabilities must be positive' if p.any? { |value| value < 0 }
+    raise ArgumentError, 'probabilities must be positive' if p.any? { |value| value < 0 }
 
     sum = p.reduce(:+)
     p.map! { |value| Rational(value, sum) } unless sum == 1
