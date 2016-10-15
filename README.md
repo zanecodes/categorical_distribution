@@ -21,22 +21,22 @@ Or install it yourself as:
 
 ## Usage
 
-r = CategoricalDistribution.new({ a: 1, b: 2, c: 3 })
-r.rand    #=> :a
-r.rand    #=> :b
-r.rand    #=> :c
-r.rand    #=> :c
-r.rand    #=> :b
+    r = CategoricalDistribution.new({ a: 1, b: 2, c: 3 })
+    r.rand    #=> :a
+    r.rand    #=> :b
+    r.rand    #=> :c
+    r.rand    #=> :c
+    r.rand    #=> :b
 
-r = CategoricalDistribution.new([1, 1, 1])
-r.take(5) #=> [1, 2, 1, 1, 2]
+    r = CategoricalDistribution.new([1, 1, 1])
+    r.take(5) #=> [1, 2, 1, 1, 2]
 
-r = CategoricalDistribution.new([1, 3], ['heads', 'tails'])
-r.rand    #=> "tails"
-r.rand    #=> "tails"
-r.rand    #=> "tails"
-r.rand    #=> "tails"
-r.rand    #=> "heads"
+    r = CategoricalDistribution.new([1, 3], ['heads', 'tails'])
+    r.rand    #=> "tails"
+    r.rand    #=> "tails"
+    r.rand    #=> "tails"
+    r.rand    #=> "tails"
+    r.rand    #=> "heads"
 
 ## Development
 
