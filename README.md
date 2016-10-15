@@ -1,8 +1,7 @@
 # CategoricalDistribution
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/categorical_distribution`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This gem provides an implementation of a [categorical distribution](https://en.wikipedia.org/wiki/Categorical_distribution) using [Vose's Alias Method](https://en.wikipedia.org/wiki/Allas_method). More details on the implementation can be found [here](http://www.keithschwarz.com/darts-dice-coins).
+The algorithm chooses a random item, with a weighted probability given on initialization, in constant time, after an O(n) initialization step.
 
 ## Installation
 
@@ -22,7 +21,22 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+r = CategoricalDistribution.new({ a: 1, b: 2, c: 3 })
+r.rand    #=> :a
+r.rand    #=> :b
+r.rand    #=> :c
+r.rand    #=> :c
+r.rand    #=> :b
+
+r = CategoricalDistribution.new([1, 1, 1])
+r.take(5) #=> [1, 2, 1, 1, 2]
+
+r = CategoricalDistribution.new([1, 3], ['heads', 'tails'])
+r.rand    #=> "tails"
+r.rand    #=> "tails"
+r.rand    #=> "tails"
+r.rand    #=> "tails"
+r.rand    #=> "heads"
 
 ## Development
 
@@ -32,7 +46,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/categorical_distribution.
+Bug reports and pull requests are welcome on GitHub at https://github.com/zanecodes/categorical_distribution.
 
 
 ## License
