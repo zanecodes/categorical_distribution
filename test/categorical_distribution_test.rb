@@ -52,12 +52,6 @@ class CategoricalDistributionTest < Minitest::Test
     assert_equal({ a: Rational(1, 3), b: Rational(2, 3) }, r.probabilities)
   end
 
-  def test_create_distribution_with_invalid_values_array
-    assert_raises IndexError do
-      r = CategoricalDistribution.new([1, 2], [:a])
-    end
-  end
-
   def test_empty_distribution_rand_returns_nil
     r = CategoricalDistribution.new
     assert_nil r.rand

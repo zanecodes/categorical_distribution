@@ -1,5 +1,3 @@
-require 'forwardable'
-
 # Generate values from a categorical probability distribution in constant time.
 # Uses Vose's Alias Method to construct a table of probabilities and aliases.
 # To generate a value, we pick an entry in the distribution at random, and then pick
@@ -10,9 +8,7 @@ require 'forwardable'
 # See http://www.keithschwarz.com/darts-dice-coins for a detailed explanation.
 
 class CategoricalDistribution
-  extend Forwardable
   include Enumerable
-
 
   # :call-seq:
   #   CategoricalDistribution.new(p={})
@@ -49,22 +45,20 @@ class CategoricalDistribution
   def initialize(p={}, values=nil)
     if p.respond_to?(:keys) && p.respond_to?(:values)
       values, p = p.keys, p.values 
-    else
-      values ||= p.each_index.to_a
     end
+
+    @size = p.size
+    @values = values
 
     raise ArgumentError, 'probabilities must be positive' if p.any? { |value| value < 0 }
 
     sum = p.reduce(:+)
     p.map! { |value| Rational(value, sum) } unless sum == 1
 
-    @p = Hash[[values, p].transpose].freeze
+    @prob = Array.new(size, Rational(1))
+    @alias = Array.new(size)
 
-    n = p.size
-    @prob = Array.new(n, Rational(1))
-    @alias = Array.new(n)
-
-    p.map! { |value| value * n }
+    p.map! { |value| value * size }
 
     small, large = p.each_index.partition { |i| p[i] < 1 }
 
@@ -95,10 +89,11 @@ class CategoricalDistribution
   #   distribution.rand      #=> :c
 
   def rand(random: Random)
-    return if @prob.empty?
+    return if empty?
 
-    i = random.rand(@prob.size)
-    random.rand <= @prob[i] ? @p.keys[i] : @p.keys[@alias[i]]
+    i = random.rand(size)
+    index = random.rand <= @prob[i] ? i : @alias[i]
+    @values.nil? ? index : @values[index]
   end
 
 
@@ -127,6 +122,7 @@ class CategoricalDistribution
 
   # Returns the distribution's values and their probabilities, as a hash of
   # objects to Rationals which sum to one, or an empty hash if the distribution is empty.
+  # This operation is expensive, in exchange for memory efficiency.
   #
   #   CategoricalDistribution.new([1, 1, 1]).probabilities   
   #     #=> {0 => (1/3), 1 => (1/3), 2 => (1/3)}
@@ -135,7 +131,10 @@ class CategoricalDistribution
   #     #=> {}
 
   def probabilities
-    @p
+    p = @prob.clone
+    @alias.each_with_index { |a, i| p[a] += 1 - @prob[i] unless a.nil? }
+    p.map! { |prob| prob / size }
+    Hash[[@values || size.times.to_a, p].transpose]
   end
 
 
@@ -159,7 +158,9 @@ class CategoricalDistribution
   #     #=> false
 
   def ==(other)
-    self.probabilities == other.probabilities
+    self.prob     == other.prob &&
+      self.alias  == other.alias &&
+      self.values == other.values
   end
 
 
@@ -171,14 +172,35 @@ class CategoricalDistribution
 
   def eql?(other)
     self.equal?(other) || 
-      (self.class == other.class && self.probabilities == other.probabilities)
+      (self.class   == other.class &&
+       self.prob    == other.prob &&
+       self.alias   == other.alias &&
+       self.values  == other.values)
   end
 
 
-  def_delegators :@p, :empty?, :hash, :length, :size, :to_s
+  # :call_seq:
+  #   distribution.hash    -> fixnum
+  #
+  # Compute a hash-code for this probability distribution.
+  #
+  # Two distributions with the same values and probabilities will have the same
+  # hash code (and will compare using #eql?).
 
-  ##
-  # :method: empty?
+  def hash
+    hash = 17
+    hash = 37 * hash + @prob.hash
+    hash = 37 * hash + @alias.hash
+    hash = 37 * hash + @values.hash
+    hash
+  end
+
+
+  def to_s
+    probabilities.to_s
+  end
+
+
   # :call_seq:
   #   distribution.empty?    -> true or false
   #
@@ -187,17 +209,9 @@ class CategoricalDistribution
   #   distribution = CategoricalDistribution.new
   #   distribution.empty?   #=> true
 
-  ##
-  # :method: hash
-  # :call_seq:
-  #   distribution.hash    -> fixnum
-  #
-  # Compute a hash-code for this probability distribution.
-  #
-  # Two distributions with the same values and probabilities will have the same
-  # hash code (and will compare using #eql?).
-  #
-  # See also Hash#hash.
+  def empty?
+    size.zero?
+  end
 
   ##
   # :method: length
@@ -208,4 +222,10 @@ class CategoricalDistribution
   #
   #   CategoricalDistribution.new([1, 2, 3, 4]).length    #=> 4
   #   CategoricalDistribution.new.length                  #=> 0
+  
+  attr_reader :size
+  alias length size
+
+  protected
+    attr_reader :prob, :alias, :values
 end
